@@ -25,8 +25,8 @@ url = 'http://www.romma.fr/station_24.php?id=%2072'
 
 dico = DataParse.getDatas(url)
 
-for stationName in urllist:
-    DataParse.getDatas(urllist[stationName])
+#for stationName in urllist:
+#    DataParse.getDatas(urllist[stationName])
 
 #####################
 #                   #
