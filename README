@@ -4,3 +4,6 @@ Learning from datasets to predict avalanche forecasting
 
 First step will be to gather datas from online sources
 Second step will be to try to predict things
+
+You need to install BeautifulSoup in order to use it
+(easy_install BeautifulSoup4 to install the package)

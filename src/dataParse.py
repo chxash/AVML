@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import urllib
 
 class DataParse:
-    #methods used to load data from ronma
+    #methods used to load data from romma
     @staticmethod
     def ParseCut(contentToParse,refCaracter,numCaracToCut):
         result = contentToParse.get_text()
