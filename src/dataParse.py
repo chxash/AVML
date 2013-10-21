@@ -2,7 +2,15 @@ from bs4 import BeautifulSoup
 import urllib
 
 class DataParse:
-    #methods used to load data from romma
+
+    nullValue = '---'
+    
+    ######################################
+    #methods used to load data from romma#
+    ######################################
+    
+    #Parse txt and cut the end according to a certain caracter (refCaracter) and a number of caracter to cut
+    #Very often refCaracter is something like a physical unit (C for temperature ...)
     @staticmethod
     def ParseCut(contentToParse,refCaracter,numCaracToCut):
         result = contentToParse.get_text()
@@ -10,16 +18,19 @@ class DataParse:
         result = result[:index-numCaracToCut]
         return result
         
+    #Parse txt and simply trunk the end according to a number of caracter to cut
     @staticmethod    
     def ParseTrunk(contentToParse,numToTrunk):
         result = contentToParse.get_text()
         result = result[:-numToTrunk]
         return result
         
+    #Return string on 3 or 4 caracters depending on input
     @staticmethod    
     def ParseHour(contentToParse):
         return contentToParse[4 if contentToParse[3]==' ' else 3:]
      
+    #Convert date
     @staticmethod    
     def convertDate(txtToParse):
         day = txtToParse[30:32]
@@ -53,7 +64,8 @@ class DataParse:
         else: 
             print 'couldnt read month'
             return
-            
+     
+    #get a list of station's urls from romma
     @staticmethod
     def getStations():
         urllist = {}
@@ -75,6 +87,7 @@ class DataParse:
             iterStations = iterStations.next_sibling.next_sibling
         return urllist
         
+    #get the whole data from a particular station
     @staticmethod
     def getDatas(urlStation):
         dico={}
@@ -102,7 +115,11 @@ class DataParse:
         oneHourVarTemp = DataParse.ParseCut(iter.contents[3].contents[1],'C',2)
         print('oneHourVarTemp : '+oneHourVarTemp)
 
-        rainFromMidnight = iter.contents[5].contents[1].get_text()
+        rainDataAvailable = (len(iter.contents[5])>1)
+        if (rainDataAvailable):
+            rainFromMidnight = iter.contents[5].contents[1].get_text()
+        else:
+            rainFromMidnight = DataParse.nullValue
         print('rainFromMidnight : '+rainFromMidnight)
 
         #Delta Temperature 24h / min Temperature / Rain intensity
@@ -115,7 +132,10 @@ class DataParse:
         minTemp = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
         print('minTemp : '+minTemp)
 
-        rainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
+        if (rainDataAvailable):
+            rainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
+        else:
+            rainIntensity = DataParse.nullValue
         print('rainIntensity : '+rainIntensity)
 
         #Max Temperature from 0h / Max Rain Intensity from 0h
@@ -123,8 +143,11 @@ class DataParse:
 
         maxTemp = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
         print('maxTemp : '+maxTemp)
-
-        maxRainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
+        
+        if (rainDataAvailable):
+            maxRainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
+        else:
+            maxRainIntensity=DataParse.nullValue
         print('maxRainIntensity : '+maxRainIntensity)
 
         #Humidity / Pression
@@ -147,7 +170,7 @@ class DataParse:
             pressionVarLastThreeHour=DataParse.ParseTrunk(iter.contents[3].contents[1],4)
             pressionVarLastThreeHour=pressionVarLastThreeHour[1 if pressionVarLastThreeHour[0]=='+' else 0:]
         else:
-            pressionVarLastThreeHour='---'
+            pressionVarLastThreeHour=DataParse.nullValue
         print('pressionVarLastThreeHour : '+pressionVarLastThreeHour)
 
         #Min Humidity / Pression since midnight 
@@ -163,8 +186,8 @@ class DataParse:
             minPression=DataParse.ParseTrunk(iter.contents[3].contents[1],4)
             hourMinPression=DataParse.ParseHour(iter.contents[3].contents[2])
         else:
-            minPression='---'
-            hourMinPression='---'
+            minPression=DataParse.nullValue
+            hourMinPression=DataParse.nullValue
             
         print('minPression : '+minPression)
         print('hourMinPression : '+hourMinPression)
@@ -182,8 +205,8 @@ class DataParse:
             maxPression=DataParse.ParseTrunk(iter.contents[3].contents[1],4)
             hourMaxPression=DataParse.ParseHour(iter.contents[3].contents[2])
         else:
-            maxPression='---'
-            hourMaxPression='---'
+            maxPression=DataParse.nullValue
+            hourMaxPression=DataParse.nullValue
         print('maxPression : '+maxPression)
 
 
@@ -197,7 +220,10 @@ class DataParse:
 
         #max Sun / wind chill Temperature
         iter = iter.next_sibling.next_sibling
-        maxSun=DataParse.ParseCut(iter.contents[1].contents[1],'w',1)
+        if (iter.contents[1].contents[1].get_text()[0]=='S'):
+            maxSun = DataParse.nullValue
+        else:
+            maxSun=DataParse.ParseCut(iter.contents[1].contents[1],'w',1)
         print('maxSun : '+maxSun)
 
         windChillTemp = iter.contents[3].contents[1].get_text()
