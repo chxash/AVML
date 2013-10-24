@@ -80,6 +80,7 @@ class DataParse:
             i=1
             while (i<len(iterStations.contents[2].contents)):
                 stationUrl = iterStations.contents[2].contents[i].contents[0]['href']
+                                
                 #TODO work on name
                 stationName = iterStations.contents[2].contents[i].contents[0].contents[0].get_text()
                 i=i+2
@@ -89,14 +90,18 @@ class DataParse:
         
     #get the whole data from a particular station
     @staticmethod
-    def getDatas(urlStation):
+    def getDatas(urlStation,debug):
         dico={}
         filehandle = urllib.urlopen(urlStation, proxies={})
         soup = BeautifulSoup(filehandle)
         
         #Tag h3
         iter=soup.find(id="affichage_simple").find_next('h3')
-
+        #looking if recent data for the station
+        if (iter.contents[1].contents[0].get_text()<>''):
+            print('Most recent data are > 15 min, skipping')
+            return dico
+     
         #Day and Hour
         txtToParse = iter.get_text()
         obsDate = DataParse.convertDate(txtToParse)
@@ -104,65 +109,64 @@ class DataParse:
         hourIndex = txtToParse[37:].index(':')
         obsHour = txtToParse[37+hourIndex-2:37+hourIndex+3]
 
-        print('obsDate : '+obsDate)
-        print('obsHour : '+obsHour)
+        dico['obsDate'] = obsDate
+        dico['obsHour'] = obsHour
 
         #Temperature / OneHourVarTemp / RainFromMidnight
         iter = iter.next_sibling.next_sibling.find_next('tr').next_sibling.next_sibling
         obsTemperature = iter.contents[1].contents[0].get_text()
-        print('obsTemperature : '+obsTemperature)
+        dico['obsTemperature'] = obsTemperature
 
         oneHourVarTemp = DataParse.ParseCut(iter.contents[3].contents[1],'C',2)
-        print('oneHourVarTemp : '+oneHourVarTemp)
-
+        dico['oneHourVarTemp'] = oneHourVarTemp
+        
         rainDataAvailable = (len(iter.contents[5])>1)
         if (rainDataAvailable):
             rainFromMidnight = iter.contents[5].contents[1].get_text()
         else:
             rainFromMidnight = DataParse.nullValue
-        print('rainFromMidnight : '+rainFromMidnight)
+        dico['rainFromMidnight'] = rainFromMidnight
 
         #Delta Temperature 24h / min Temperature / Rain intensity
         iter = iter.next_sibling.next_sibling
         deltaTemp = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
-        print('deltaTemp : '+deltaTemp)
-
+        dico['deltaTemp'] = deltaTemp
 
         iter = iter.next_sibling.next_sibling
         minTemp = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
-        print('minTemp : '+minTemp)
+        dico['minTemp'] = minTemp
 
         if (rainDataAvailable):
             rainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
         else:
             rainIntensity = DataParse.nullValue
-        print('rainIntensity : '+rainIntensity)
+        dico['rainIntensity'] = rainIntensity
 
         #Max Temperature from 0h / Max Rain Intensity from 0h
         iter = iter.next_sibling.next_sibling
 
         maxTemp = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
-        print('maxTemp : '+maxTemp)
+        dico['maxTemp'] = maxTemp
         
         if (rainDataAvailable):
             maxRainIntensity = DataParse.ParseCut(iter.contents[3].contents[1],'m',1)
         else:
             maxRainIntensity=DataParse.nullValue
-        print('maxRainIntensity : '+maxRainIntensity)
+        dico['maxRainIntensity'] = maxRainIntensity
 
         #Humidity / Pression
         iter = iter.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
 
         humidity = iter.contents[1].contents[0].get_text()
-        print('humidity : '+humidity)
+        dico['humidity'] = humidity
 
         pression = iter.contents[5].contents[0].get_text()
-        print('pression : '+pression)
+        dico['pression'] = pression
 
         #Rosee Point 
         iter = iter.next_sibling.next_sibling
         roseePoint = DataParse.ParseCut(iter.contents[1].contents[1],'C',2)
-        print('roseePoint : '+roseePoint)
+        dico['roseePoint'] = roseePoint
 
         #Pression Var (3h) 
         iter = iter.next_sibling.next_sibling
@@ -171,16 +175,16 @@ class DataParse:
             pressionVarLastThreeHour=pressionVarLastThreeHour[1 if pressionVarLastThreeHour[0]=='+' else 0:]
         else:
             pressionVarLastThreeHour=DataParse.nullValue
-        print('pressionVarLastThreeHour : '+pressionVarLastThreeHour)
+        dico['pressionVarLastThreeHour'] = pressionVarLastThreeHour
 
         #Min Humidity / Pression since midnight 
         #And hour of event
         iter = iter.next_sibling.next_sibling
         minHumidity=DataParse.ParseTrunk(iter.contents[1].contents[1],2)
-        print('minHumidity : '+minHumidity)
+        dico['minHumidity'] = minHumidity
 
         hourMinHumidity=DataParse.ParseHour(iter.contents[1].contents[2])
-        print('hourMinHumidity : '+hourMinHumidity)
+        dico['hourMinHumidity'] = hourMinHumidity
 
         if (len(iter.contents[3].contents)>1):
             minPression=DataParse.ParseTrunk(iter.contents[3].contents[1],4)
@@ -189,17 +193,17 @@ class DataParse:
             minPression=DataParse.nullValue
             hourMinPression=DataParse.nullValue
             
-        print('minPression : '+minPression)
-        print('hourMinPression : '+hourMinPression)
+        dico['minPression'] = minPression
+        dico['hourMinPression'] = hourMinPression
 
         #Max Humidity / Pression since midnight
         #And hour of event
         iter = iter.next_sibling.next_sibling
         maxHumidity = DataParse.ParseTrunk(iter.contents[1].contents[1],2)
-        print('maxHumidity : '+maxHumidity)
+        dico['maxHumidity'] = maxHumidity
 
         hourMaxHumidity=DataParse.ParseHour(iter.contents[1].contents[2])
-        print('hourMaxHumidity : '+hourMaxHumidity)
+        dico['hourMaxHumidity'] = hourMaxHumidity
 
         if (len(iter.contents[3].contents)>1):
             maxPression=DataParse.ParseTrunk(iter.contents[3].contents[1],4)
@@ -207,16 +211,15 @@ class DataParse:
         else:
             maxPression=DataParse.nullValue
             hourMaxPression=DataParse.nullValue
-        print('maxPression : '+maxPression)
+        dico['maxPression'] = maxPression
 
-
-        print('hourMaxPression : '+hourMaxPression)
+        dico['hourMaxPression'] = hourMaxPression
 
         #Sun
         iter = iter.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
         findSun = iter.contents[1].contents[1]
         sun = findSun.get_text()
-        print('sun : '+sun)
+        dico['sun'] = sun
 
         #max Sun / wind chill Temperature
         iter = iter.next_sibling.next_sibling
@@ -224,33 +227,67 @@ class DataParse:
             maxSun = DataParse.nullValue
         else:
             maxSun=DataParse.ParseCut(iter.contents[1].contents[1],'w',1)
-        print('maxSun : '+maxSun)
+        dico['maxSun'] = maxSun
 
         windChillTemp = iter.contents[3].contents[1].get_text()
-        print('windChillTemp : '+windChillTemp)
+        dico['windChillTemp'] = windChillTemp
 
         #Average Wind
         iter = iter.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
         avgWind = iter.contents[1].contents[1].get_text()
-        print('avgWind : '+avgWind)
+        dico['avgWind'] = avgWind
 
         #TODO rose des vents ?
 
         #Direction
         iter = iter.next_sibling.next_sibling.next_sibling.next_sibling
         windDirection = iter.contents[1].contents[1].get_text()
-        print('windDirection : '+windDirection)
-
+        dico['windDirection'] = windDirection
 
         #Max Wind last 10 min
         iter = iter.next_sibling.next_sibling
         maxWindLastTen = DataParse.ParseCut(iter.contents[1].contents[1],'k',1)
-        print('maxWindLastTen : '+maxWindLastTen)
+        dico['maxWindLastTen'] = maxWindLastTen
 
         #Max Wind since midnight / Hour
         iter = iter.next_sibling.next_sibling
         maxWindMidnight = DataParse.ParseCut(iter.contents[1].contents[1],'k',1)
-        print('maxWindMidnight : '+maxWindMidnight)
+        dico['maxWindMidnight'] = maxWindMidnight
 
         maxWindHour=DataParse.ParseHour(iter.contents[1].contents[2])
-        print('maxWindHour : '+maxWindHour)
+        dico['maxWindHour'] = maxWindHour
+        
+        if debug:
+            print('obsDate : '+obsDate)
+            print('obsHour : '+obsHour)
+            print('obsTemperature : '+obsTemperature)
+            print('oneHourVarTemp : '+oneHourVarTemp)
+
+            print('rainFromMidnight : '+rainFromMidnight)
+            print('deltaTemp : '+deltaTemp)
+            print('minTemp : '+minTemp)
+            print('rainIntensity : '+rainIntensity)
+            print('maxTemp : '+maxTemp)
+            print('maxRainIntensity : '+maxRainIntensity)
+            print('humidity : '+humidity)
+            print('pression : '+pression)
+            print('roseePoint : '+roseePoint)
+            print('pressionVarLastThreeHour : '+pressionVarLastThreeHour)
+            print('minHumidity : '+minHumidity)
+            print('hourMinHumidity : '+hourMinHumidity)
+            print('minPression : '+minPression)
+            print('hourMinPression : '+hourMinPression)
+            print('maxHumidity : '+maxHumidity)
+            print('hourMaxHumidity : '+hourMaxHumidity)
+            print('maxPression : '+maxPression)
+            print('hourMaxPression : '+hourMaxPression)
+            print('sun : '+sun)
+            print('maxSun : '+maxSun)
+            print('windChillTemp : '+windChillTemp)
+            print('avgWind : '+avgWind)
+            print('windDirection : '+windDirection)
+            print('maxWindLastTen : '+maxWindLastTen)
+            print('maxWindMidnight : '+maxWindMidnight)
+            print('maxWindHour : '+maxWindHour)
+            
+        return dico

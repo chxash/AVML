@@ -1,1 +1,3 @@
 sources : ronma, meteo, nivose, BRA
+
+beautifulSoup => lxml
