@@ -7,13 +7,15 @@ from dataSave import DataSave
 
 #gather every station from url
 urlStations = 'http://www.romma.fr/index.php'
-path = ''
+
+#TODO different path regarding location
+path = 'C:/Users/Ash/Desktop/AVML/src/dataSave/'
 
 #Permits different version of storage for the data
 currentDataVersion = 1
 dataVersion = {}
 
-#organize /rename data
+#TODO : organize /rename data
 dataVersion[1] = ['obsDate','obsHour','obsTemperature','oneHourVarTemp',
 'rainFromMidnight','deltaTemp','minTemp','rainIntensity','maxTemp',
 'maxRainIntensity','humidity','pression','roseePoint','pressionVarLastThreeHour',
@@ -23,12 +25,6 @@ dataVersion[1] = ['obsDate','obsHour','obsTemperature','oneHourVarTemp',
 
 
 urllist = DataParse.getStations()
-
-#Test urls
-#url = 'http://www.romma.fr/station_24.php?id=%206'
-#url = 'http://www.romma.fr/station_24.php?id=%2066'
-#url = 'http://www.romma.fr/station_24.php?id=%2072'
-
 
 ########################################
 #                                      #
@@ -42,7 +38,9 @@ for stationName in urllist:
     if (len(result)>0):
         result['StationName'] = stationName
         result['Version'] = currentDataVersion #First version of data saved, to be defined
+        DataSave.saveStation(result,path,dataVersion[currentDataVersion])
     else:
+        #TODO list of skipped stations + save ?
         print 'skipping'+stationName
-    #DataSave.saveStation(result,path,dataVersion[currentDataVersion])
-    print result
+
+    #print result

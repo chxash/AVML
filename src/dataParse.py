@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 import urllib
+import re
 
 class DataParse:
 
-    nullValue = '---'
+    nullValue = '--'
     
     ######################################
     #methods used to load data from romma#
@@ -65,6 +66,20 @@ class DataParse:
             print 'couldnt read month'
             return
      
+    @staticmethod
+    def removeSpecialCharacters(string):
+        return re.sub('/|[\\\]|:|[\*]|[\?]|[\"]|<>|[\|]','',string)
+    
+    @staticmethod
+    def formatData(dico):
+        #Set null values
+        for key in dico:
+            if (dico[key].replace(' ','').replace(u'\xa0', u'')=='') or ('--' in dico[key]) or ('-.' in dico[key]):
+                dico[key] = DataParse.nullValue
+            if dico[key][0] in ('+'):#,' '):
+                dico[key] = dico[key][1:]
+        #TODO work on hours
+     
     #get a list of station's urls from romma
     @staticmethod
     def getStations():
@@ -80,9 +95,8 @@ class DataParse:
             i=1
             while (i<len(iterStations.contents[2].contents)):
                 stationUrl = iterStations.contents[2].contents[i].contents[0]['href']
-                                
-                #TODO work on name
                 stationName = iterStations.contents[2].contents[i].contents[0].contents[0].get_text()
+                stationName = DataParse.removeSpecialCharacters(stationName)
                 i=i+2
                 urllist[stationName] = stationUrl
             iterStations = iterStations.next_sibling.next_sibling
@@ -256,6 +270,8 @@ class DataParse:
 
         maxWindHour=DataParse.ParseHour(iter.contents[1].contents[2])
         dico['maxWindHour'] = maxWindHour
+        
+        DataParse.formatData(dico)
         
         if debug:
             print('obsDate : '+obsDate)
