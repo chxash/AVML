@@ -71,14 +71,15 @@ class DataParse:
         return re.sub('/|[\\\]|:|[\*]|[\?]|[\"]|<>|[\|]','',string)
     
     @staticmethod
-    def formatData(dico):
-        #Set null values
+    def formatData(dico):    
         for key in dico:
+            #Set null values
             if (dico[key].replace(' ','').replace(u'\xa0', u'')=='') or ('--' in dico[key]) or ('-.' in dico[key]):
                 dico[key] = DataParse.nullValue
             if dico[key][0] in ('+'):#,' '):
                 dico[key] = dico[key][1:]
-        #TODO work on hours
+            #Deleting white spaces
+            dico[key] = dico[key].replace(' ','')
      
     #get a list of station's urls from romma
     @staticmethod
@@ -97,6 +98,7 @@ class DataParse:
                 stationUrl = iterStations.contents[2].contents[i].contents[0]['href']
                 stationName = iterStations.contents[2].contents[i].contents[0].contents[0].get_text()
                 stationName = DataParse.removeSpecialCharacters(stationName)
+                stationName = stationName.replace(u'\xa0', u'')
                 i=i+2
                 urllist[stationName] = stationUrl
             iterStations = iterStations.next_sibling.next_sibling
@@ -168,6 +170,8 @@ class DataParse:
             maxRainIntensity=DataParse.nullValue
         dico['maxRainIntensity'] = maxRainIntensity
 
+        #Hour of max intensity?
+        
         #Humidity / Pression
         iter = iter.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
 

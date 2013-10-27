@@ -16,11 +16,12 @@ currentDataVersion = 1
 dataVersion = {}
 
 #TODO : organize /rename data
-dataVersion[1] = ['obsDate','obsHour','obsTemperature','oneHourVarTemp',
-'rainFromMidnight','deltaTemp','minTemp','rainIntensity','maxTemp',
-'maxRainIntensity','humidity','pression','roseePoint','pressionVarLastThreeHour',
-'minHumidity','hourMinHumidity','minPression','hourMinPression','maxHumidity',
-'hourMaxHumidity','maxPression','hourMaxPression','sun','maxSun','windChillTemp',
+dataVersion[1] = ['obsDate','obsHour',
+'obsTemperature','oneHourVarTemp','deltaTemp','minTemp','maxTemp','windChillTemp',
+'rainFromMidnight','rainIntensity','maxRainIntensity',
+'humidity','roseePoint','minHumidity','hourMinHumidity','maxHumidity','hourMaxHumidity',
+'pression','pressionVarLastThreeHour','minPression','hourMinPression','maxPression','hourMaxPression',
+'sun','maxSun',
 'avgWind','windDirection','maxWindLastTen','maxWindMidnight','maxWindHour']
 
 
@@ -32,6 +33,9 @@ urllist = DataParse.getStations()
 #                                      #
 ########################################
 
+okStations = []
+skippedStations = []
+
 for stationName in urllist:
     print stationName
     result = DataParse.getDatas(urllist[stationName],False)
@@ -39,8 +43,10 @@ for stationName in urllist:
         result['StationName'] = stationName
         result['Version'] = currentDataVersion #First version of data saved, to be defined
         DataSave.saveStation(result,path,dataVersion[currentDataVersion])
+        okStations.append(stationName)
     else:
         #TODO list of skipped stations + save ?
         print 'skipping'+stationName
-
-    #print result
+        skippedStations.append(stationName)
+DataSave.saveSummary(path,currentDataVersion,okStations,skippedStations)
+#print result
