@@ -38,7 +38,7 @@ skippedStations = []
 
 for stationName in urllist:
     print stationName
-    result = DataParse.getDatas(urllist[stationName],False)
+    result = DataParse.getDatas('http://www.romma.fr/'+urllist[stationName][2:],False)
     if (len(result)>0):
         result['StationName'] = stationName
         result['Version'] = currentDataVersion #First version of data saved, to be defined
@@ -49,4 +49,6 @@ for stationName in urllist:
         print 'skipping'+stationName
         skippedStations.append(stationName)
 DataSave.saveSummary(path,currentDataVersion,okStations,skippedStations)
+
+test = DataParse.getBRADept(38,True)
 #print result

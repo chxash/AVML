@@ -5,6 +5,7 @@ import re
 class DataParse:
 
     nullValue = '--'
+    braMainUrl = 'http://france.meteofrance.com/france/MONTAGNE?MONTAGNE_PORTLET.path=montagnebulletinneige%2FDEPT'
     
     ######################################
     #methods used to load data from romma#
@@ -98,7 +99,8 @@ class DataParse:
                 stationUrl = iterStations.contents[2].contents[i].contents[0]['href']
                 stationName = iterStations.contents[2].contents[i].contents[0].contents[0].get_text()
                 stationName = DataParse.removeSpecialCharacters(stationName)
-                stationName = stationName.replace(u'\xa0', u'')
+                #stationName = stationName.replace(u'\xa0', u'')
+                stationName = stationName.encode("ascii","ignore")
                 i=i+2
                 urllist[stationName] = stationUrl
             iterStations = iterStations.next_sibling.next_sibling
@@ -311,3 +313,15 @@ class DataParse:
             print('maxWindHour : '+maxWindHour)
             
         return dico
+
+    ###################################
+    #methods used to load data from MF#
+    ###################################
+    
+    #get BRA for a particular department, essentially gathering risk value
+    @staticmethod
+    def getBRADept(deptNumber,debug):
+        urlDept = DataParse.braMainUrl+str(deptNumber)
+        filehandleBra = urllib.urlopen(urlDept, proxies={})
+        soupBra = BeautifulSoup(filehandleBra)
+        return

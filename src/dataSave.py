@@ -18,15 +18,18 @@ class DataSave:
         
     @staticmethod
     def saveSummary(path,dataVersion,okStations,skippedStations):
-        myFile = open(path+'summary.txt', 'a')
+        myFile = open(path+'log/summary.txt', 'a')
         time =  str(datetime.datetime.now())[:-7]
+        myFile.write('=====================================================')
         myFile.write(time+'\n')
-        myFile.write('OkStations : ')
+        myFile.write('OkStations\n')
         for ok in okStations:
-            myFile.write(ok+';')
-        myFile.write('\nSkipped : ')
+            print ok
+            myFile.write(ok+'\n')
+        myFile.write('\nSkipped\n')
         for skipped in skippedStations:
-            myFile.write(skipped+';')
+            print skipped
+            myFile.write(skipped+'\n')
         myFile.write('\n')
         myFile.close()
         return
